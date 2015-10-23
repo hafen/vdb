@@ -33,6 +33,11 @@ validateNameGroup <- function(name, group) {
   assign("group", group, envir = parent.frame())
 
 }
+#to be honest validateNameGroup is a pretty funky idea for a return =)
+validateNameGroup2 = function(name, group){
+	 validateNameGroup(name,group)
+	return(list(name=name, group=group))
+}
 
 ## internal
 validateCogFn <- function(dat, cogFn, verbose = FALSE) {
@@ -144,6 +149,27 @@ checkDisplayPath <- function(displayPrefix, verbose = TRUE) {
   dir.create(displayPrefix, recursive = TRUE)
 }
 
+#Unfortunatley updateDisplayList won't take a displayObj directly so this function translates displayObj
+updateDisplayList.displayObj = function(displayObj, conn){
+	select = c("group",
+		"name",
+		"desc", 
+		"n",
+      "panelFnType",
+      "preRender",
+      "dataClass", 
+      "cogClass",
+      "height",
+      "width",
+      "updated",
+      "keySig"
+	)
+  	select0 = select[which(select %in% names(displayObj))]
+	subsetDisplayObj = displayObj[select0] 
+	selectNA = setdiff(select, names(displayObj))
+	for(n in selectNA) subsetDisplayObj[n] = NA
+    updateDisplayList(subsetDisplayObj, conn)
+}
 ## internal
 updateDisplayList <- function(argList, conn) {
 
@@ -224,7 +250,7 @@ encodePNG <- function(plotLoc) {
 
 # this seems to be the best cross-platform way to copy directories
 # if to exists it will be deleted
-copy_dir <- function(from, to) {
+copy_dir <- function(from, to, overwrite=TRUE) {
   if(file.exists(to))
     unlink(to, recursive = TRUE)
   ff <- list.files(from, recursive = TRUE, full.names = TRUE)
@@ -232,6 +258,7 @@ copy_dir <- function(from, to) {
   upath <- unique(dirname(ff2))
   for(up in upath)
     suppressWarnings(dir.create(up, recursive = TRUE))
-  all(file.copy(ff, ff2, overwrite = TRUE))
+  all(file.copy(ff, ff2, overwrite = overwrite))
 }
+
 

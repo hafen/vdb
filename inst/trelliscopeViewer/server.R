@@ -26,6 +26,11 @@ if(file.exists(connFile)) {
   vdbPrefix <- vdbConn$path
 }
 
+globalsFile = "globals.Rdata"
+if(file.exists(globalsFile)){
+	load(globalsFile)	
+}
+
 logMsg("vdbPrefix is ", vdbPrefix)
 
 options(vdbShinyPrefix = vdbPrefix)
