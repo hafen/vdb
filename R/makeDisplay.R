@@ -28,7 +28,7 @@ if(getRversion() >= "2.15.1") {
 #' @param params a named list of objects external to the input data that are needed in the distributed computing (most should be taken care of automatically such that this is rarely necessary to specify)
 #' @param packages a vector of R package names that contain functions used in \code{panelFn} or \code{cogFn} (most should be taken care of automatically such that this is rarely necessary to specify)
 #' @param control parameters specifying how the backend should handle things (most-likely parameters to \code{rhwatch} in RHIPE) - see \code{\link[datadr]{rhipeControl}} and \code{\link[datadr]{localDiskControl}}
-#'
+#' @param detect.globals  if TRUE params and packages are automatically detected.  
 #' @details Many of the parameters are optional or have defaults.  For several examples, see the documentation at tessera.io: \url{http://tessera.io/docs-trelliscope}
 #'
 #' Panels by default are not pre-rendered. Instead, this function creates a display object and computes and stores the cognostics.  Panels are then rendered on the fly by the Tessera backend and pushed to the Trelliscope viewer as html with the panel images embedded in the html.  If a user would like to pre-render the images for every subset (using \code{preRender = TRUE}), then by default the image files for the panels will be stored to a local disk connection (see \code{\link{localDiskConn}}) inside the VDB directory, organized in subdirectories by group and name of the display.  Optionally, the user can specify the \code{output} parameter to be any valid "kvConnection" object, as long as it is one that persists on disk (e.g. \code{\link{hdfsConn}}).
@@ -65,7 +65,8 @@ makeDisplay <- function(
   keySig = NULL,
   params = NULL,
   packages = NULL,
-  control = NULL
+  control = NULL,
+  detect.globals = TRUE
 ) {
   validateVdbConn(conn)
 
@@ -125,8 +126,11 @@ makeDisplay <- function(
   }
 
   if(verbose) message("* Validating 'panelFn'...")
-  panelEx <- kvApply(kvExample(data), panelFn)$value
-
+  if(!is.null(params) && class(params) == "list"){
+  	environment(panelFn) = list2env(params)
+  	environment(cogFn) = list2env(params)
+  }
+  panelEx =  kvApply(kvExample(data), panelFn)$value
   cogEx <- validateCogFn(data, cogFn, verbose)
 
   if(is.null(desc) || is.na(desc))
@@ -197,9 +201,11 @@ makeDisplay <- function(
   cogGlobals <- drGetGlobals(cogFn)
 
   packages <- c(packages, "trelliscope")
-  packages <- unique(c(packages, panelGlobals$packages, cogGlobals$packages))
-
-  globalVarList <- c(panelGlobals$vars, cogGlobals$vars)
+  if(detect.globals)
+  	packages <- unique(c(packages, panelGlobals$packages, cogGlobals$packages))
+  globalVarList = list()
+  if(detect.globals)
+  	globalVarList <- c(panelGlobals$vars, cogGlobals$vars)
 
   if(length(params) > 0)
     for(pnm in names(params))

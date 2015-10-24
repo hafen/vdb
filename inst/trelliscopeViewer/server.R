@@ -26,6 +26,7 @@ if(file.exists(connFile)) {
   vdbPrefix <- vdbConn$path
 }
 
+
 logMsg("vdbPrefix is ", vdbPrefix)
 
 options(vdbShinyPrefix = vdbPrefix)
