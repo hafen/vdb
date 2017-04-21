@@ -79,7 +79,7 @@ makePNG <- function(dat, panelFn = NULL, file, width, height, origWidth = width,
           # tmp <- tmp + opts(pointsize = pointsize)
           # this is ugly now - make more robust, etc.
           ggbuild <- ggplot2::ggplot_build(tmp)
-          gglims <- ggbuild$panel$ranges
+          gglims <- ggbuild$layout$panel_ranges
           if(length(gglims) == 1) {
             plotXLim <- gglims[[1]]$x.range
             plotYLim <- gglims[[1]]$y.range
@@ -87,7 +87,7 @@ makePNG <- function(dat, panelFn = NULL, file, width, height, origWidth = width,
             curYLim <- trsCurYLim(lims, dat, plotYLim)
 
             if(lims$x$type != "free") {
-              if(ggbuild$panel$x_scales[[1]]$scale_name == "datetime") {
+              if(ggbuild$layout$panel_scales$x[[1]]$scale_name == "datetime") {
                 tmp <- tmp + ggplot2::scale_x_datetime(limits = as.POSIXct(curXLim, origin = "1970-01-01"))
               } else {
                 tmp <- tmp + ggplot2::scale_x_continuous(limits = curXLim)
